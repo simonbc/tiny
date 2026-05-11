@@ -60,6 +60,31 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
         db.session.commit()
         return redirect(url_for("studio", site_slug=site_slug, page=page_slug))
 
+    @app.post("/studio/<site_slug>/pages")
+    def studio_create_page(site_slug: str):
+        site = _get_site_or_404(site_slug)
+        slug = request.form.get("slug", "").strip()
+        title = request.form.get("title", "").strip()
+        if not slug:
+            abort(400)
+        if _find_page(site, slug) is not None:
+            abort(409)
+        site.pages.append(Page(slug=slug, title=title or slug, body_markdown=""))
+        db.session.commit()
+        return redirect(url_for("studio", site_slug=site_slug, page=slug))
+
+    @app.post("/studio/<site_slug>/pages/<page_slug>/delete")
+    def studio_delete_page(site_slug: str, page_slug: str):
+        site = _get_site_or_404(site_slug)
+        if page_slug == "home":
+            abort(400)
+        page = _find_page(site, page_slug)
+        if page is None:
+            abort(404)
+        db.session.delete(page)
+        db.session.commit()
+        return redirect(url_for("studio", site_slug=site_slug))
+
     @app.post("/studio/<site_slug>/css")
     def studio_update_css(site_slug: str):
         site = _get_site_or_404(site_slug)
