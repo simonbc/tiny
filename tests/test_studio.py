@@ -36,6 +36,27 @@ def test_static_css_files_are_served(client):
     assert ".studio" in studio.get_data(as_text=True)
 
 
+def test_studio_renders_tabs(client, app):
+    _seed_site(app)
+    body = client.get("/studio/alice").get_data(as_text=True)
+    # One radio input per tab, all in the same radio group.
+    for tab in ("pages", "edit", "css", "chat"):
+        assert f'id="tab-{tab}"' in body
+        assert f'for="tab-{tab}"' in body
+    # Pages is checked by default.
+    assert '<input type="radio" name="studio-tab" id="tab-pages" checked' in body
+    # Each tab has a labelled panel.
+    for tab in ("pages", "edit", "css", "chat"):
+        assert f'data-tab="{tab}"' in body
+
+
+def test_studio_css_styles_tabs(client):
+    css = client.get("/static/css/studio.css").get_data(as_text=True)
+    # CSS-only tabs: hide panels by default, show on :checked.
+    assert ".tab-panel" in css
+    assert ":checked" in css
+
+
 def test_studio_shows_home_page_editor_by_default(client, app):
     _seed_site(app)
     response = client.get("/studio/alice")
