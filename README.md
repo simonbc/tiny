@@ -5,30 +5,34 @@ project overview.
 
 ## Local development
 
+Requires [uv](https://docs.astral.sh/uv/) and an Anthropic API key.
+
 ```bash
-python -m venv .venv
-.venv/bin/pip install -e ".[dev]"
-export ANTHROPIC_API_KEY=sk-ant-...
-export FLASK_APP=tiny.app:create_app
-.venv/bin/flask db upgrade            # create / upgrade local SQLite schema
-.venv/bin/flask run --debug --port 8000
+uv venv
+uv pip install -e ".[dev]"
+
+cp .env.example .env        # then edit .env with your ANTHROPIC_API_KEY
+set -a; source .env; set +a
+
+uv run flask db upgrade     # create / upgrade local SQLite schema
+uv run flask run --debug --port 8000
 ```
 
-Visit `http://tiny.localhost:8000` to use the landing page. Created sites
-are served at `http://tiny.localhost:8000/<slug>` and edited at
-`http://tiny.localhost:8000/studio/<slug>`.
+Visit `http://localhost:8000` to use the landing page. Created sites
+are served at `http://localhost:8000/<slug>` and edited at
+`http://localhost:8000/studio/<slug>`.
 
 Tests use SQLite in-memory and a scripted fake LLM client:
 
 ```bash
-.venv/bin/pytest
+uv run pytest
 ```
 
 Before committing, run the formatters:
 
 ```bash
-.venv/bin/black .
-.venv/bin/ruff check --fix .
+uv run black .
+uv run ruff check --fix .
 ```
 
 ## Database migrations
@@ -40,8 +44,8 @@ tables.
 After changing a model:
 
 ```bash
-.venv/bin/flask db migrate -m "what changed"
-.venv/bin/flask db upgrade
+uv run flask db migrate -m "what changed"
+uv run flask db upgrade
 ```
 
 ## Deploying to Fly.io
