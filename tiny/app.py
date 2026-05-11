@@ -2,6 +2,7 @@ import os
 import secrets
 
 from flask import Flask, abort, redirect, render_template, request, url_for
+from flask_migrate import Migrate
 from markdown import markdown
 
 from tiny.agent import run_agent
@@ -11,12 +12,13 @@ from tiny.models import ChatMessage, Page, Site
 
 def create_app(config: dict | None = None, llm_client=None) -> Flask:
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///tiny.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = _resolve_database_url()
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     if config:
         app.config.update(config)
 
     db.init_app(app)
+    Migrate(app, db)
     app.llm_client = llm_client
 
     # Import models so SQLAlchemy registers them before create_all runs.
@@ -88,6 +90,17 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
         return _render_page(site_slug, page_slug)
 
     return app
+
+
+def _resolve_database_url() -> str:
+    """Pick the right DB URL. Normalize ``postgres://`` (Fly/Heroku) to
+    ``postgresql+psycopg://`` so SQLAlchemy uses psycopg v3."""
+    url = os.environ.get("DATABASE_URL", "sqlite:///tiny.db")
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url[len("postgres://") :]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://") :]
+    return url
 
 
 def _generate_unique_slug() -> str:
