@@ -14,56 +14,75 @@
       <div class="sidebar">
         <h1>{{ site.title }}</h1>
 
-        <h2>Pages</h2>
-        <ul>
-          {% for p in site.pages %}
-            <li class="{% if p.slug == page.slug %}active{% endif %}">
-              <a href="{{ url_for('studio', site_slug=site.slug, page=p.slug) }}">{{ p.slug }}</a>
-              {% if p.slug != "home" %}
-                <form method="post" action="/studio/{{ site.slug }}/pages/{{ p.slug }}/delete" style="display:inline">
-                  <button type="submit" title="Delete page">×</button>
-                </form>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-        <form method="post" action="/studio/{{ site.slug }}/pages">
-          <input type="text" name="slug" placeholder="slug (e.g. about)" required />
-          <input type="text" name="title" placeholder="title" />
-          <button type="submit">Add page</button>
-        </form>
+        <div class="tabs">
+          <input type="radio" name="studio-tab" id="tab-pages" checked>
+          <input type="radio" name="studio-tab" id="tab-edit">
+          <input type="radio" name="studio-tab" id="tab-css">
+          <input type="radio" name="studio-tab" id="tab-chat">
 
-        <h2>Edit page: {{ page.slug }}</h2>
-        <form method="post" action="{{ url_for('studio_update_page', site_slug=site.slug, page_slug=page.slug) }}">
-          <label>
-            Title
-            <input type="text" name="title" value="{{ page.title }}" />
-          </label>
-          <label>
-            Body (markdown)
-            <textarea name="body_markdown" rows="16">{{ page.body_markdown }}</textarea>
-          </label>
-          <button type="submit">Save page</button>
-        </form>
+          <nav class="tab-labels">
+            <label for="tab-pages">Pages</label>
+            <label for="tab-edit">Edit</label>
+            <label for="tab-css">CSS</label>
+            <label for="tab-chat">Chat</label>
+          </nav>
 
-        <h2>Site CSS</h2>
-        <form method="post" action="{{ url_for('studio_update_css', site_slug=site.slug) }}">
-          <textarea name="custom_css" rows="12">{{ site.custom_css }}</textarea>
-          <button type="submit">Save CSS</button>
-        </form>
+          <section class="tab-panel" data-tab="pages">
+            <ul>
+              {% for p in site.pages %}
+                <li class="{% if p.slug == page.slug %}active{% endif %}">
+                  <a href="{{ url_for('studio', site_slug=site.slug, page=p.slug) }}">{{ p.slug }}</a>
+                  {% if p.slug != "home" %}
+                    <form method="post" action="/studio/{{ site.slug }}/pages/{{ p.slug }}/delete" style="display:inline">
+                      <button type="submit" title="Delete page">×</button>
+                    </form>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            <form method="post" action="/studio/{{ site.slug }}/pages">
+              <input type="text" name="slug" placeholder="slug (e.g. about)" required />
+              <input type="text" name="title" placeholder="title" />
+              <button type="submit">Add page</button>
+            </form>
+          </section>
 
-        <h2>Chat</h2>
-        <div class="chat-history">
-          {% for m in site.chat_messages %}
-            <div class="chat-message chat-{{ m.role }}">
-              <strong>{{ m.role }}:</strong> {{ m.content }}
+          <section class="tab-panel" data-tab="edit">
+            <h2>Edit page: {{ page.slug }}</h2>
+            <form method="post" action="{{ url_for('studio_update_page', site_slug=site.slug, page_slug=page.slug) }}">
+              <label>
+                Title
+                <input type="text" name="title" value="{{ page.title }}" />
+              </label>
+              <label>
+                Body (markdown)
+                <textarea name="body_markdown" rows="16">{{ page.body_markdown }}</textarea>
+              </label>
+              <button type="submit">Save page</button>
+            </form>
+          </section>
+
+          <section class="tab-panel" data-tab="css">
+            <form method="post" action="{{ url_for('studio_update_css', site_slug=site.slug) }}">
+              <textarea name="custom_css" rows="12">{{ site.custom_css }}</textarea>
+              <button type="submit">Save CSS</button>
+            </form>
+          </section>
+
+          <section class="tab-panel" data-tab="chat">
+            <div class="chat-history">
+              {% for m in site.chat_messages %}
+                <div class="chat-message chat-{{ m.role }}">
+                  <strong>{{ m.role }}:</strong> {{ m.content }}
+                </div>
+              {% endfor %}
             </div>
-          {% endfor %}
+            <form method="post" action="/studio/{{ site.slug }}/chat">
+              <textarea name="message" rows="3" placeholder="Ask tiny to change something..."></textarea>
+              <button type="submit">Send</button>
+            </form>
+          </section>
         </div>
-        <form method="post" action="/studio/{{ site.slug }}/chat">
-          <textarea name="message" rows="3" placeholder="Ask tiny to change something..."></textarea>
-          <button type="submit">Send</button>
-        </form>
       </div>
     </div>
   </body>

@@ -36,6 +36,52 @@
   font-weight: bold;
 }
 
+/* Tabs: radio inputs drive panel visibility via ~ sibling selectors. */
+.tabs > input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tab-labels {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-3);
+}
+
+.tab-labels label {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  color: var(--color-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-labels label:hover {
+  color: var(--color-fg);
+}
+
+.tab-panel {
+  display: none;
+}
+
+#tab-pages:checked ~ .tab-panel[data-tab="pages"],
+#tab-edit:checked ~ .tab-panel[data-tab="edit"],
+#tab-css:checked ~ .tab-panel[data-tab="css"],
+#tab-chat:checked ~ .tab-panel[data-tab="chat"] {
+  display: block;
+}
+
+#tab-pages:checked ~ .tab-labels label[for="tab-pages"],
+#tab-edit:checked ~ .tab-labels label[for="tab-edit"],
+#tab-css:checked ~ .tab-labels label[for="tab-css"],
+#tab-chat:checked ~ .tab-labels label[for="tab-chat"] {
+  color: var(--color-fg);
+  border-bottom-color: var(--color-fg);
+  font-weight: 600;
+}
+
 textarea {
   width: 100%;
   font-family: var(--font-mono);
