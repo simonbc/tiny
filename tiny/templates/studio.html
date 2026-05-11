@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Studio — {{ site.title }}</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; }
+      .studio { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; }
+      .preview { border-right: 1px solid #ddd; }
+      .preview iframe { width: 100%; height: 100%; border: 0; }
+      .sidebar { padding: 1rem; overflow-y: auto; }
+      .sidebar h2 { margin-top: 1.5rem; }
+      .sidebar ul { list-style: none; padding: 0; }
+      .sidebar li { padding: 0.25rem 0; }
+      .sidebar li.active a { font-weight: bold; }
+      textarea { width: 100%; font-family: ui-monospace, monospace; box-sizing: border-box; }
+      input[type="text"] { width: 100%; box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <div class="studio">
+      <div class="preview">
+        <iframe src="/{{ site.slug }}"></iframe>
+      </div>
+      <div class="sidebar">
+        <h1>{{ site.title }}</h1>
+
+        <h2>Pages</h2>
+        <ul>
+          {% for p in site.pages %}
+            <li class="{% if p.slug == page.slug %}active{% endif %}">
+              <a href="{{ url_for('studio', site_slug=site.slug, page=p.slug) }}">{{ p.slug }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <h2>Edit page: {{ page.slug }}</h2>
+        <form method="post" action="{{ url_for('studio_update_page', site_slug=site.slug, page_slug=page.slug) }}">
+          <label>
+            Title
+            <input type="text" name="title" value="{{ page.title }}" />
+          </label>
+          <label>
+            Body (markdown)
+            <textarea name="body_markdown" rows="16">{{ page.body_markdown }}</textarea>
+          </label>
+          <button type="submit">Save page</button>
+        </form>
+
+        <h2>Site CSS</h2>
+        <form method="post" action="{{ url_for('studio_update_css', site_slug=site.slug) }}">
+          <textarea name="custom_css" rows="12">{{ site.custom_css }}</textarea>
+          <button type="submit">Save CSS</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
