@@ -36,7 +36,13 @@ class AnthropicClient:
     def __init__(self, *, api_key: str | None = None, model: str | None = None):
         from anthropic import Anthropic
 
-        self._client = Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
+        key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not key:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY is not set. Copy .env.example to .env, fill in "
+                "your key, and restart the server (or `set -a; source .env; set +a`)."
+            )
+        self._client = Anthropic(api_key=key)
         self._model = model or self.DEFAULT_MODEL
 
     def create_message(

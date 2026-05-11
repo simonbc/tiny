@@ -1,6 +1,7 @@
 import os
 import secrets
 
+from dotenv import find_dotenv, load_dotenv
 from flask import Flask, abort, redirect, render_template, request, url_for
 from flask_migrate import Migrate
 from markdown import markdown
@@ -11,6 +12,7 @@ from tiny.models import ChatMessage, Page, Site
 
 
 def create_app(config: dict | None = None, llm_client=None) -> Flask:
+    load_dotenv(find_dotenv(usecwd=True))
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = _resolve_database_url()
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
