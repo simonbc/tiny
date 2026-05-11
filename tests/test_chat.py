@@ -54,7 +54,7 @@ def test_post_chat_runs_agent_and_persists_messages(client, app):
 
     response = client.post("/studio/alice/chat", data={"message": "make it blue"})
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/studio/alice")
+    assert response.headers["Location"].endswith("/studio/alice#tab-chat")
 
     with app.app_context():
         site = db.session.query(Site).filter_by(slug="alice").one()

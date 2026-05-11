@@ -15,19 +15,14 @@
         <h1>{{ site.title }}</h1>
 
         <div class="tabs">
-          <input type="radio" name="studio-tab" id="tab-pages" checked>
-          <input type="radio" name="studio-tab" id="tab-edit">
-          <input type="radio" name="studio-tab" id="tab-css">
-          <input type="radio" name="studio-tab" id="tab-chat">
-
           <nav class="tab-labels">
-            <label for="tab-pages">Pages</label>
-            <label for="tab-edit">Edit</label>
-            <label for="tab-css">CSS</label>
-            <label for="tab-chat">Chat</label>
+            <a href="#tab-pages">Pages</a>
+            <a href="#tab-edit">Edit</a>
+            <a href="#tab-css">CSS</a>
+            <a href="#tab-chat">Chat</a>
           </nav>
 
-          <section class="tab-panel" data-tab="pages">
+          <section id="tab-pages" class="tab-panel" data-tab="pages">
             <ul>
               {% for p in site.pages %}
                 <li class="{% if p.slug == page.slug %}active{% endif %}">
@@ -47,7 +42,7 @@
             </form>
           </section>
 
-          <section class="tab-panel" data-tab="edit">
+          <section id="tab-edit" class="tab-panel" data-tab="edit">
             <h2>Edit page: {{ page.slug }}</h2>
             <form method="post" action="{{ url_for('studio_update_page', site_slug=site.slug, page_slug=page.slug) }}">
               <label>
@@ -62,14 +57,14 @@
             </form>
           </section>
 
-          <section class="tab-panel" data-tab="css">
+          <section id="tab-css" class="tab-panel" data-tab="css">
             <form method="post" action="{{ url_for('studio_update_css', site_slug=site.slug) }}">
               <textarea name="custom_css" rows="12">{{ site.custom_css }}</textarea>
               <button type="submit">Save CSS</button>
             </form>
           </section>
 
-          <section class="tab-panel" data-tab="chat">
+          <section id="tab-chat" class="tab-panel" data-tab="chat">
             <div class="chat-history">
               {% for m in site.chat_messages %}
                 <div class="chat-message chat-{{ m.role }}">
