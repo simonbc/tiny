@@ -15,6 +15,27 @@ def test_studio_returns_404_for_unknown_site(client):
     assert client.get("/studio/nope").status_code == 404
 
 
+def test_studio_links_external_css(client, app):
+    _seed_site(app)
+    body = client.get("/studio/alice").get_data(as_text=True)
+    assert '<link rel="stylesheet" href="/static/css/base.css">' in body
+    assert '<link rel="stylesheet" href="/static/css/studio.css">' in body
+    # Inline app-chrome <style> block should be gone; only the user's
+    # per-site custom_css is still inlined (and that lives in site.html).
+    assert "<style>" not in body
+
+
+def test_static_css_files_are_served(client):
+    base = client.get("/static/css/base.css")
+    studio = client.get("/static/css/studio.css")
+    assert base.status_code == 200
+    assert studio.status_code == 200
+    # base.css owns the design tokens.
+    assert "--color-bg" in base.get_data(as_text=True)
+    # studio.css owns the studio layout.
+    assert ".studio" in studio.get_data(as_text=True)
+
+
 def test_studio_shows_home_page_editor_by_default(client, app):
     _seed_site(app)
     response = client.get("/studio/alice")
