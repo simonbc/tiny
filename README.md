@@ -8,8 +8,7 @@ project overview.
 Requires [uv](https://docs.astral.sh/uv/) and an Anthropic API key.
 
 ```bash
-uv venv
-uv pip install -e ".[dev]"
+uv sync                     # install deps from uv.lock into .venv
 
 cp .env.example .env        # then edit .env with your ANTHROPIC_API_KEY
 set -a; source .env; set +a
