@@ -62,3 +62,21 @@ def test_post_sites_studio_loads_even_when_agent_creates_no_pages(client, app):
 
     studio_response = client.get(f"/studio/{slug}")
     assert studio_response.status_code == 200
+
+
+def test_post_sites_persists_prompt_and_reply_as_chat_messages(client, app):
+    app.llm_client = FakeLLMClient(
+        [LLMResponse(stop_reason="end_turn", content=[text("tell me more about your site")])]
+    )
+
+    response = client.post("/sites", data={"prompt": "build me something"})
+    slug = response.headers["Location"].rsplit("/", 1)[-1]
+
+    with app.app_context():
+        site = db.session.query(Site).filter_by(slug=slug).one()
+        roles_and_contents = [(m.role, m.content) for m in site.chat_messages]
+
+    assert roles_and_contents == [
+        ("user", "build me something"),
+        ("assistant", "tell me more about your site"),
+    ]

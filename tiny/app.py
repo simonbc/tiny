@@ -38,9 +38,12 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
         slug = _generate_unique_slug()
         site = Site(slug=slug, title="", custom_css="")
         site.pages.append(Page(slug="home", title="Home", body_markdown=""))
+        site.chat_messages.append(ChatMessage(role="user", content=prompt))
         db.session.add(site)
         db.session.commit()
-        run_agent(_resolve_llm_client(app), site, prompt)
+        reply = run_agent(_resolve_llm_client(app), site, prompt)
+        site.chat_messages.append(ChatMessage(role="assistant", content=reply))
+        db.session.commit()
         return redirect(url_for("studio", site_slug=slug))
 
     @app.get("/studio/<site_slug>")
