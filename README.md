@@ -49,10 +49,12 @@ After changing a model:
 The repo has a `Dockerfile` and `fly.toml`. First-time setup:
 
 ```bash
-fly launch --no-deploy --copy-config        # accept existing fly.toml
-fly postgres create --name tiny-db           # provision Postgres
-fly postgres attach --app tiny tiny-db       # sets DATABASE_URL
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly apps create tiny-ai                       # claim the app name
+fly postgres create --name tiny-ai-pg \
+  --region fra --initial-cluster-size 1 \
+  --vm-size shared-cpu-1x --volume-size 1     # provision Postgres
+fly postgres attach --app tiny-ai tiny-ai-pg  # sets DATABASE_URL
+fly secrets set ANTHROPIC_API_KEY=sk-ant-... --app tiny-ai
 fly deploy
 ```
 

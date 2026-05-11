@@ -1,5 +1,5 @@
-app = "tiny"
-primary_region = "iad"
+app = "tiny-ai"
+primary_region = "fra"
 
 [build]
 
