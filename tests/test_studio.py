@@ -39,22 +39,18 @@ def test_static_css_files_are_served(client):
 def test_studio_renders_tabs(client, app):
     _seed_site(app)
     body = client.get("/studio/alice").get_data(as_text=True)
-    # One radio input per tab, all in the same radio group.
+    # Each tab is an anchor link pointing at the panel's id.
     for tab in ("pages", "edit", "css", "chat"):
         assert f'id="tab-{tab}"' in body
-        assert f'for="tab-{tab}"' in body
-    # Pages is checked by default.
-    assert '<input type="radio" name="studio-tab" id="tab-pages" checked' in body
-    # Each tab has a labelled panel.
-    for tab in ("pages", "edit", "css", "chat"):
+        assert f'href="#tab-{tab}"' in body
         assert f'data-tab="{tab}"' in body
 
 
 def test_studio_css_styles_tabs(client):
     css = client.get("/static/css/studio.css").get_data(as_text=True)
-    # CSS-only tabs: hide panels by default, show on :checked.
+    # CSS-only tabs: hide panels by default, show the :target panel.
     assert ".tab-panel" in css
-    assert ":checked" in css
+    assert ":target" in css
 
 
 def test_studio_shows_home_page_editor_by_default(client, app):
@@ -95,7 +91,7 @@ def test_studio_updates_page(client, app):
         data={"title": "Hello world", "body_markdown": "# New body"},
     )
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/studio/alice?page=home")
+    assert response.headers["Location"].endswith("/studio/alice?page=home#tab-edit")
     with app.app_context():
         page = (
             db.session.query(Page)
@@ -123,7 +119,7 @@ def test_studio_updates_css(client, app):
         data={"custom_css": "body { color: green; }"},
     )
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/studio/alice")
+    assert response.headers["Location"].endswith("/studio/alice#tab-css")
     with app.app_context():
         site = db.session.query(Site).filter_by(slug="alice").one()
         assert site.custom_css == "body { color: green; }"

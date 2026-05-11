@@ -58,7 +58,7 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
         page.title = request.form["title"]
         page.body_markdown = request.form["body_markdown"]
         db.session.commit()
-        return redirect(url_for("studio", site_slug=site_slug, page=page_slug))
+        return redirect(url_for("studio", site_slug=site_slug, page=page_slug, _anchor="tab-edit"))
 
     @app.post("/studio/<site_slug>/pages")
     def studio_create_page(site_slug: str):
@@ -71,7 +71,7 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
             abort(409)
         site.pages.append(Page(slug=slug, title=title or slug, body_markdown=""))
         db.session.commit()
-        return redirect(url_for("studio", site_slug=site_slug, page=slug))
+        return redirect(url_for("studio", site_slug=site_slug, page=slug, _anchor="tab-edit"))
 
     @app.post("/studio/<site_slug>/pages/<page_slug>/delete")
     def studio_delete_page(site_slug: str, page_slug: str):
@@ -83,14 +83,14 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
             abort(404)
         db.session.delete(page)
         db.session.commit()
-        return redirect(url_for("studio", site_slug=site_slug))
+        return redirect(url_for("studio", site_slug=site_slug, _anchor="tab-pages"))
 
     @app.post("/studio/<site_slug>/css")
     def studio_update_css(site_slug: str):
         site = _get_site_or_404(site_slug)
         site.custom_css = request.form["custom_css"]
         db.session.commit()
-        return redirect(url_for("studio", site_slug=site_slug))
+        return redirect(url_for("studio", site_slug=site_slug, _anchor="tab-css"))
 
     @app.post("/studio/<site_slug>/chat")
     def studio_chat(site_slug: str):
@@ -104,7 +104,7 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
         reply = run_agent(_resolve_llm_client(app), site, message, history=history)
         site.chat_messages.append(ChatMessage(role="assistant", content=reply))
         db.session.commit()
-        return redirect(url_for("studio", site_slug=site_slug))
+        return redirect(url_for("studio", site_slug=site_slug, _anchor="tab-chat"))
 
     @app.get("/<site_slug>")
     def site_home(site_slug: str):

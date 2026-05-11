@@ -32,7 +32,7 @@ def test_create_page(client, app):
         data={"slug": "projects", "title": "Projects"},
     )
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/studio/alice?page=projects")
+    assert response.headers["Location"].endswith("/studio/alice?page=projects#tab-edit")
 
     with app.app_context():
         site = db.session.query(Site).filter_by(slug="alice").one()
@@ -59,7 +59,7 @@ def test_delete_page(client, app):
     _seed_site(app)
     response = client.post("/studio/alice/pages/about/delete")
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/studio/alice")
+    assert response.headers["Location"].endswith("/studio/alice#tab-pages")
 
     with app.app_context():
         site = db.session.query(Site).filter_by(slug="alice").one()

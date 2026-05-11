@@ -36,13 +36,8 @@
   font-weight: bold;
 }
 
-/* Tabs: radio inputs drive panel visibility via ~ sibling selectors. */
-.tabs > input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
+/* Tabs: URL fragment drives which panel is visible (:target).
+   When no fragment matches, Pages is the default. */
 .tab-labels {
   display: flex;
   gap: var(--space-2);
@@ -50,15 +45,15 @@
   margin-bottom: var(--space-3);
 }
 
-.tab-labels label {
+.tab-labels a {
   padding: var(--space-2) var(--space-3);
-  cursor: pointer;
+  text-decoration: none;
   color: var(--color-muted);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
 
-.tab-labels label:hover {
+.tab-labels a:hover {
   color: var(--color-fg);
 }
 
@@ -66,17 +61,19 @@
   display: none;
 }
 
-#tab-pages:checked ~ .tab-panel[data-tab="pages"],
-#tab-edit:checked ~ .tab-panel[data-tab="edit"],
-#tab-css:checked ~ .tab-panel[data-tab="css"],
-#tab-chat:checked ~ .tab-panel[data-tab="chat"] {
+.tab-panel:target {
   display: block;
 }
 
-#tab-pages:checked ~ .tab-labels label[for="tab-pages"],
-#tab-edit:checked ~ .tab-labels label[for="tab-edit"],
-#tab-css:checked ~ .tab-labels label[for="tab-css"],
-#tab-chat:checked ~ .tab-labels label[for="tab-chat"] {
+.tabs:not(:has(.tab-panel:target)) #tab-pages {
+  display: block;
+}
+
+.tabs:has(#tab-pages:target) .tab-labels a[href="#tab-pages"],
+.tabs:has(#tab-edit:target) .tab-labels a[href="#tab-edit"],
+.tabs:has(#tab-css:target) .tab-labels a[href="#tab-css"],
+.tabs:has(#tab-chat:target) .tab-labels a[href="#tab-chat"],
+.tabs:not(:has(.tab-panel:target)) .tab-labels a[href="#tab-pages"] {
   color: var(--color-fg);
   border-bottom-color: var(--color-fg);
   font-weight: 600;
