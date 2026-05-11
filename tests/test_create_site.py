@@ -49,3 +49,16 @@ def test_post_sites_creates_site_via_agent_and_redirects_to_studio(client, app):
 def test_post_sites_requires_prompt(client, app):
     response = client.post("/sites", data={"prompt": ""})
     assert response.status_code == 400
+
+
+def test_post_sites_studio_loads_even_when_agent_creates_no_pages(client, app):
+    app.llm_client = FakeLLMClient(
+        [LLMResponse(stop_reason="end_turn", content=[text("nothing to do")])]
+    )
+
+    response = client.post("/sites", data={"prompt": "hi"})
+    assert response.status_code == 302
+    slug = response.headers["Location"].rsplit("/", 1)[-1]
+
+    studio_response = client.get(f"/studio/{slug}")
+    assert studio_response.status_code == 200

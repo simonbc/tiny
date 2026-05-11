@@ -37,6 +37,7 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
             abort(400)
         slug = _generate_unique_slug()
         site = Site(slug=slug, title="", custom_css="")
+        site.pages.append(Page(slug="home", title="Home", body_markdown=""))
         db.session.add(site)
         db.session.commit()
         run_agent(_resolve_llm_client(app), site, prompt)
