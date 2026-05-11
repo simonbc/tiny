@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from tiny.db import db
 from tiny.models import Page, Site
 
@@ -80,3 +82,49 @@ def test_delete_unknown_page_returns_404(client, app):
     _seed_site(app)
     response = client.post("/studio/alice/pages/missing/delete")
     assert response.status_code == 404
+
+
+def test_studio_update_page_accepts_blog_layout_and_post_fields(client, app):
+    _seed_site(app)
+    response = client.post(
+        "/studio/alice/pages/about",
+        data={
+            "title": "About",
+            "body_markdown": "about me",
+            "layout": "blog",
+            "is_post": "on",
+            "published_at": "2026-05-01T10:00",
+        },
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        page = (
+            db.session.query(Page)
+            .join(Site)
+            .filter(Site.slug == "alice", Page.slug == "about")
+            .one()
+        )
+        assert page.layout == "blog"
+        assert page.is_post is True
+        assert page.published_at == datetime(2026, 5, 1, 10, 0)
+
+
+def test_studio_update_page_defaults_when_fields_absent(client, app):
+    _seed_site(app)
+    response = client.post(
+        "/studio/alice/pages/about",
+        data={"title": "About", "body_markdown": "about me"},
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        page = (
+            db.session.query(Page)
+            .join(Site)
+            .filter(Site.slug == "alice", Page.slug == "about")
+            .one()
+        )
+        assert page.layout == "page"
+        assert page.is_post is False
+        assert page.published_at is None

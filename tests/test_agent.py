@@ -98,6 +98,79 @@ def test_delete_page_refuses_home(app):
     assert "cannot delete" in tool_result["content"]
 
 
+def test_upsert_page_can_create_post(app):
+    fake = FakeLLMClient(
+        [
+            LLMResponse(
+                stop_reason="tool_use",
+                content=[
+                    tool_use(
+                        "a",
+                        "upsert_page",
+                        {
+                            "slug": "hello-world",
+                            "title": "Hello world",
+                            "body_markdown": "first post",
+                            "is_post": True,
+                            "published_at": "2026-05-01T10:00:00Z",
+                        },
+                    ),
+                ],
+            ),
+            LLMResponse(stop_reason="end_turn", content=[text("done")]),
+        ]
+    )
+
+    with app.app_context():
+        site = Site(slug="x", title="", custom_css="")
+        site.pages.append(Page(slug="home", title="Home", body_markdown=""))
+        db.session.add(site)
+        db.session.commit()
+
+        run_agent(fake, site, "add a post")
+
+        site = db.session.query(Site).filter_by(slug="x").one()
+        post = next(p for p in site.pages if p.slug == "hello-world")
+        assert post.is_post is True
+        assert post.published_at is not None
+        assert post.layout == "page"
+
+
+def test_upsert_page_can_set_blog_layout(app):
+    fake = FakeLLMClient(
+        [
+            LLMResponse(
+                stop_reason="tool_use",
+                content=[
+                    tool_use(
+                        "a",
+                        "upsert_page",
+                        {
+                            "slug": "home",
+                            "title": "Home",
+                            "body_markdown": "welcome",
+                            "layout": "blog",
+                        },
+                    ),
+                ],
+            ),
+            LLMResponse(stop_reason="end_turn", content=[text("done")]),
+        ]
+    )
+
+    with app.app_context():
+        site = Site(slug="x", title="", custom_css="")
+        site.pages.append(Page(slug="home", title="Home", body_markdown=""))
+        db.session.add(site)
+        db.session.commit()
+
+        run_agent(fake, site, "make home a blog")
+
+        site = db.session.query(Site).filter_by(slug="x").one()
+        home = next(p for p in site.pages if p.slug == "home")
+        assert home.layout == "blog"
+
+
 def test_delete_page_removes_non_home_page(app):
     fake = FakeLLMClient(
         [

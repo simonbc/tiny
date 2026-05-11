@@ -1,5 +1,6 @@
 import os
 import secrets
+from datetime import datetime, timezone
 
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, abort, redirect, render_template, request, url_for
@@ -60,6 +61,9 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
             abort(404)
         page.title = request.form["title"]
         page.body_markdown = request.form["body_markdown"]
+        page.layout = request.form.get("layout", "page")
+        page.is_post = "is_post" in request.form
+        page.published_at = _parse_form_datetime(request.form.get("published_at", ""))
         db.session.commit()
         return redirect(url_for("studio", site_slug=site_slug, page=page_slug, _anchor="tab-edit"))
 
@@ -158,10 +162,25 @@ def _find_page(site: Site, page_slug: str) -> Page | None:
     return next((p for p in site.pages if p.slug == page_slug), None)
 
 
+def _parse_form_datetime(value: str) -> datetime | None:
+    value = value.strip()
+    if not value:
+        return None
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
 def _render_page(site_slug: str, page_slug: str):
     site = _get_site_or_404(site_slug)
     page = _find_page(site, page_slug)
     if page is None:
         abort(404)
     body_html = markdown(page.body_markdown)
-    return render_template("site.html", site=site, page=page, body_html=body_html)
+    posts = sorted(
+        (p for p in site.pages if p.is_post),
+        key=lambda p: p.published_at or p.created_at,
+        reverse=True,
+    )
+    return render_template("site.html", site=site, page=page, body_html=body_html, posts=posts)
