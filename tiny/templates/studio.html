@@ -52,6 +52,19 @@
           <textarea name="custom_css" rows="12">{{ site.custom_css }}</textarea>
           <button type="submit">Save CSS</button>
         </form>
+
+        <h2>Chat</h2>
+        <div class="chat-history">
+          {% for m in site.chat_messages %}
+            <div class="chat-message chat-{{ m.role }}">
+              <strong>{{ m.role }}:</strong> {{ m.content }}
+            </div>
+          {% endfor %}
+        </div>
+        <form method="post" action="/studio/{{ site.slug }}/chat">
+          <textarea name="message" rows="3" placeholder="Ask tiny to change something..."></textarea>
+          <button type="submit">Send</button>
+        </form>
       </div>
     </div>
   </body>

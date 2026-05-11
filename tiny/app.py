@@ -6,7 +6,7 @@ from markdown import markdown
 
 from tiny.agent import run_agent
 from tiny.db import db
-from tiny.models import Page, Site
+from tiny.models import ChatMessage, Page, Site
 
 
 def create_app(config: dict | None = None, llm_client=None) -> Flask:
@@ -62,6 +62,20 @@ def create_app(config: dict | None = None, llm_client=None) -> Flask:
     def studio_update_css(site_slug: str):
         site = _get_site_or_404(site_slug)
         site.custom_css = request.form["custom_css"]
+        db.session.commit()
+        return redirect(url_for("studio", site_slug=site_slug))
+
+    @app.post("/studio/<site_slug>/chat")
+    def studio_chat(site_slug: str):
+        site = _get_site_or_404(site_slug)
+        message = request.form.get("message", "").strip()
+        if not message:
+            abort(400)
+        history = [{"role": m.role, "content": m.content} for m in site.chat_messages]
+        site.chat_messages.append(ChatMessage(role="user", content=message))
+        db.session.commit()
+        reply = run_agent(_resolve_llm_client(app), site, message, history=history)
+        site.chat_messages.append(ChatMessage(role="assistant", content=reply))
         db.session.commit()
         return redirect(url_for("studio", site_slug=site_slug))
 

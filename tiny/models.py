@@ -26,6 +26,11 @@ class Site(db.Model):
         cascade="all, delete-orphan",
         order_by="Page.id",
     )
+    chat_messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="site",
+        cascade="all, delete-orphan",
+        order_by="ChatMessage.id",
+    )
 
 
 class Page(db.Model):
@@ -41,3 +46,15 @@ class Page(db.Model):
     updated_at: Mapped[datetime] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
     site: Mapped[Site] = relationship(back_populates="pages")
+
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=_utcnow)
+
+    site: Mapped[Site] = relationship(back_populates="chat_messages")

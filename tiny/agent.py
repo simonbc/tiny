@@ -58,19 +58,29 @@ TOOLS: list[dict[str, Any]] = [
 MAX_TURNS = 10
 
 
-def run_agent(client: LLMClient, site: Site, user_message: str) -> None:
+def run_agent(
+    client: LLMClient,
+    site: Site,
+    user_message: str,
+    history: list[dict[str, Any]] | None = None,
+) -> str:
     """Drive a tool-use loop until the model stops calling tools.
 
-    Mutates `site` in place via tool calls and commits at the end.
+    Mutates `site` in place via tool calls and commits at the end. Returns the
+    final assistant text (concatenated text blocks from the last response, or
+    empty string if the model produced no text).
     """
-    messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
+    messages: list[dict[str, Any]] = list(history or [])
+    messages.append({"role": "user", "content": user_message})
 
+    final_text = ""
     for _ in range(MAX_TURNS):
         response = client.create_message(system=SYSTEM_PROMPT, messages=messages, tools=TOOLS)
         messages.append({"role": "assistant", "content": response.content})
 
         tool_uses = [b for b in response.content if b.get("type") == "tool_use"]
         if not tool_uses:
+            final_text = "".join(b["text"] for b in response.content if b.get("type") == "text")
             break
 
         tool_results = [
@@ -84,6 +94,7 @@ def run_agent(client: LLMClient, site: Site, user_message: str) -> None:
         messages.append({"role": "user", "content": tool_results})
 
     db.session.commit()
+    return final_text
 
 
 def _execute_tool(site: Site, name: str, input_: dict[str, Any]) -> str:
