@@ -1,13 +1,15 @@
 import os
+import secrets
 
 from flask import Flask, abort, redirect, render_template, request, url_for
 from markdown import markdown
 
+from tiny.agent import run_agent
 from tiny.db import db
 from tiny.models import Page, Site
 
 
-def create_app(config: dict | None = None) -> Flask:
+def create_app(config: dict | None = None, llm_client=None) -> Flask:
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///tiny.db")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -15,6 +17,7 @@ def create_app(config: dict | None = None) -> Flask:
         app.config.update(config)
 
     db.init_app(app)
+    app.llm_client = llm_client
 
     # Import models so SQLAlchemy registers them before create_all runs.
     import tiny.models  # noqa: F401
@@ -22,6 +25,18 @@ def create_app(config: dict | None = None) -> Flask:
     @app.get("/")
     def landing():
         return render_template("landing.html")
+
+    @app.post("/sites")
+    def create_site():
+        prompt = request.form.get("prompt", "").strip()
+        if not prompt:
+            abort(400)
+        slug = _generate_unique_slug()
+        site = Site(slug=slug, title="", custom_css="")
+        db.session.add(site)
+        db.session.commit()
+        run_agent(_resolve_llm_client(app), site, prompt)
+        return redirect(url_for("studio", site_slug=slug))
 
     @app.get("/studio/<site_slug>")
     def studio(site_slug: str):
@@ -59,6 +74,22 @@ def create_app(config: dict | None = None) -> Flask:
         return _render_page(site_slug, page_slug)
 
     return app
+
+
+def _generate_unique_slug() -> str:
+    for _ in range(10):
+        candidate = secrets.token_hex(3)
+        if db.session.query(Site).filter_by(slug=candidate).one_or_none() is None:
+            return candidate
+    raise RuntimeError("could not generate a unique slug")
+
+
+def _resolve_llm_client(app: Flask):
+    if app.llm_client is None:
+        from tiny.llm import AnthropicClient
+
+        app.llm_client = AnthropicClient()
+    return app.llm_client
 
 
 def _get_site_or_404(site_slug: str) -> Site:
